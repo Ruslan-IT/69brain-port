@@ -1,0 +1,51 @@
+.fi-sc-section.home-block > .fi-section {
+    background-color: #eef1f5;
+}
+
+.fi-sc-section.home-block--hero > .fi-section {
+    background-color: #d9e6f5;
+}
+
+.fi-sc-section.home-block--works > .fi-section {
+    background-color: #dceee4;
+}
+
+.fi-sc-section.home-block--who > .fi-section {
+    background-color: #f4e7d4;
+}
+
+.fi-sc-section.home-block--directions > .fi-section {
+    background-color: #d7eef1;
+}
+
+.fi-sc-section.home-block--cta > .fi-section {
+    background-color: #eadff2;
+}
+
+.fi-sc-section.home-block--seo > .fi-section {
+    background-color: #e5e8ef;
+}
+
+.dark .fi-sc-section.home-block--hero > .fi-section {
+    background-color: #1c3148;
+}
+
+.dark .fi-sc-section.home-block--works > .fi-section {
+    background-color: #1a3328;
+}
+
+.dark .fi-sc-section.home-block--who > .fi-section {
+    background-color: #3a2e22;
+}
+
+.dark .fi-sc-section.home-block--directions > .fi-section {
+    background-color: #16343a;
+}
+
+.dark .fi-sc-section.home-block--cta > .fi-section {
+    background-color: #32243a;
+}
+
+.dark .fi-sc-section.home-block--seo > .fi-section {
+    background-color: #242a34;
+}
