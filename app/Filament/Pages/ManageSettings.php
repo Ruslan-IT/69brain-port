@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Pages\Concerns\EditsContent;
+use App\Rules\PhoneNumber;
 use App\Rules\SafeUrl;
 use App\Support\SiteContent;
 use App\Support\SiteSettings;
@@ -65,9 +66,10 @@ class ManageSettings extends Page
                         ->columnSpanFull(),
                     TextInput::make('phone')
                         ->label('Телефон')
-                        ->tel()
+                        ->type('tel')
+                        ->rule(new PhoneNumber)
                         ->maxLength(40)
-                        ->helperText('Общий телефон страницы контактов и подвала.'),
+                        ->helperText('Общий телефон страницы контактов и подвала. Допустимы форматы с пробелами и скобками.'),
                     TextInput::make('email')
                         ->label('Электронная почта')
                         ->email()
@@ -166,21 +168,21 @@ class ManageSettings extends Page
     protected function storeContent(array $data): void
     {
         SiteContent::ensureOptions()->update([
-            'logo_text' => $data['logo_text'] ?? null,
-            'logo_url' => $data['logo_url'] ?? null,
-            'header_button_label' => $data['header_button_label'] ?? null,
-            'header_button_url' => $data['header_button_url'] ?? null,
-            'footer_lead' => $data['footer_lead'] ?? null,
-            'phone' => $data['phone'] ?? null,
-            'email' => $data['email'] ?? null,
-            'copyright' => $data['copyright'] ?? null,
+            'logo_text' => $this->nullableString($data['logo_text'] ?? null),
+            'logo_url' => $this->nullableString($data['logo_url'] ?? null),
+            'header_button_label' => $this->nullableString($data['header_button_label'] ?? null),
+            'header_button_url' => $this->nullableString($data['header_button_url'] ?? null),
+            'footer_lead' => $this->nullableString($data['footer_lead'] ?? null),
+            'phone' => $this->nullableString($data['phone'] ?? null),
+            'email' => $this->nullableString($data['email'] ?? null),
+            'copyright' => $this->nullableString($data['copyright'] ?? null),
             'footer_links' => collect($data['footer_links'] ?? [])->map(fn (array $link): array => [
                 'label' => $link['label'] ?? '',
                 'url' => $link['url'] ?? '',
             ])->values()->all(),
-            'site_name' => $data['site_name'] ?? null,
-            'default_seo_title' => $data['default_seo_title'] ?? null,
-            'default_seo_description' => $data['default_seo_description'] ?? null,
+            'site_name' => $this->nullableString($data['site_name'] ?? null),
+            'default_seo_title' => $this->nullableString($data['default_seo_title'] ?? null),
+            'default_seo_description' => $this->nullableString($data['default_seo_description'] ?? null),
         ]);
 
         SiteSettings::put(SiteSettings::HOMEPAGE, ($data['homepage_variant'] ?? 'original') === 'new' ? 'new' : 'original');

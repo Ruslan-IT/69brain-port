@@ -62,4 +62,15 @@ trait EditsContent
      * @param  array<string, mixed>  $data
      */
     abstract protected function storeContent(array $data): void;
+
+    protected function nullableString(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
+    }
 }

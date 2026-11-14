@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Forms\RichText;
 use App\Filament\Pages\Concerns\EditsContent;
+use App\Rules\PhoneNumber;
 use App\Support\SiteContent;
 use BackedEnum;
 use Filament\Forms\Components\Textarea;
@@ -54,9 +55,10 @@ class ManageContacts extends Page
                 ->schema([
                     TextInput::make('phone')
                         ->label('Телефон')
-                        ->tel()
+                        ->type('tel')
+                        ->rule(new PhoneNumber)
                         ->maxLength(40)
-                        ->helperText('Показывается на странице контактов и в подвале.'),
+                        ->helperText('Можно сохранить как +7 (988) 096-20-14, +79880962014, 8 (988) 096-20-14 или +7 988 096-20-14. Показывается на странице контактов и в подвале.'),
                     TextInput::make('email')
                         ->label('Электронная почта')
                         ->email()
@@ -195,32 +197,32 @@ class ManageContacts extends Page
     protected function storeContent(array $data): void
     {
         SiteContent::ensureOptions()->update([
-            'contacts_title' => $data['contacts_title'] ?? null,
-            'contacts_h1' => $data['contacts_h1'] ?? null,
-            'contacts_lead' => $data['contacts_lead'] ?? null,
-            'phone' => $data['phone'] ?? null,
-            'email' => $data['email'] ?? null,
-            'inn' => $data['inn'] ?? null,
-            'address' => $data['address'] ?? null,
-            'requisites' => $data['requisites'] ?? null,
-            'tax_note' => $data['tax_note'] ?? null,
+            'contacts_title' => $this->nullableString($data['contacts_title'] ?? null),
+            'contacts_h1' => $this->nullableString($data['contacts_h1'] ?? null),
+            'contacts_lead' => $this->nullableString($data['contacts_lead'] ?? null),
+            'phone' => $this->nullableString($data['phone'] ?? null),
+            'email' => $this->nullableString($data['email'] ?? null),
+            'inn' => $this->nullableString($data['inn'] ?? null),
+            'address' => $this->nullableString($data['address'] ?? null),
+            'requisites' => $this->nullableString($data['requisites'] ?? null),
+            'tax_note' => $this->nullableString($data['tax_note'] ?? null),
             'contact_extra' => $data['contact_extra'] ?? null,
             'bank_details_visible' => (bool) ($data['bank_details_visible'] ?? false),
-            'bank_currency' => $data['bank_currency'] ?? null,
-            'bank_recipient' => $data['bank_recipient'] ?? null,
-            'bank_account' => $data['bank_account'] ?? null,
-            'bank_name' => $data['bank_name'] ?? null,
-            'bank_bik' => $data['bank_bik'] ?? null,
-            'bank_correspondent_account' => $data['bank_correspondent_account'] ?? null,
-            'bank_inn' => $data['bank_inn'] ?? null,
-            'bank_kpp' => $data['bank_kpp'] ?? null,
-            'bank_okpo' => $data['bank_okpo'] ?? null,
-            'bank_ogrn' => $data['bank_ogrn'] ?? null,
-            'bank_swift' => $data['bank_swift'] ?? null,
-            'bank_address' => $data['bank_address'] ?? null,
-            'bank_office_address' => $data['bank_office_address'] ?? null,
-            'contacts_seo_title' => $data['contacts_seo_title'] ?? null,
-            'contacts_seo_description' => $data['contacts_seo_description'] ?? null,
+            'bank_currency' => $this->nullableString($data['bank_currency'] ?? null),
+            'bank_recipient' => $this->nullableString($data['bank_recipient'] ?? null),
+            'bank_account' => $this->nullableString($data['bank_account'] ?? null),
+            'bank_name' => $this->nullableString($data['bank_name'] ?? null),
+            'bank_bik' => $this->nullableString($data['bank_bik'] ?? null),
+            'bank_correspondent_account' => $this->nullableString($data['bank_correspondent_account'] ?? null),
+            'bank_inn' => $this->nullableString($data['bank_inn'] ?? null),
+            'bank_kpp' => $this->nullableString($data['bank_kpp'] ?? null),
+            'bank_okpo' => $this->nullableString($data['bank_okpo'] ?? null),
+            'bank_ogrn' => $this->nullableString($data['bank_ogrn'] ?? null),
+            'bank_swift' => $this->nullableString($data['bank_swift'] ?? null),
+            'bank_address' => $this->nullableString($data['bank_address'] ?? null),
+            'bank_office_address' => $this->nullableString($data['bank_office_address'] ?? null),
+            'contacts_seo_title' => $this->nullableString($data['contacts_seo_title'] ?? null),
+            'contacts_seo_description' => $this->nullableString($data['contacts_seo_description'] ?? null),
         ]);
     }
 }
