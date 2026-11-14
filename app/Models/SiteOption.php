@@ -9,10 +9,20 @@ class SiteOption extends Model
 {
     protected $guarded = ['id'];
 
+    /**
+     * Список колонок кэшируется на весь процесс. Если его снять до миграции,
+     * новые поля молча отбрасываются при сохранении.
+     */
+    protected function isGuardableColumn($key)
+    {
+        return true;
+    }
+
     protected function casts(): array
     {
         return [
             'footer_links' => 'array',
+            'bank_details_visible' => 'boolean',
         ];
     }
 
@@ -118,8 +128,46 @@ class SiteOption extends Model
     {
         return filled($this->phone)
             || filled($this->email)
+            || filled($this->inn)
             || filled($this->address)
             || filled($this->requisites)
+            || filled($this->tax_note)
+            || $this->publicBankLines() !== []
             || trim(strip_tags((string) $this->contact_extra)) !== '';
+    }
+
+    public function notificationEmail(): ?string
+    {
+        $email = trim((string) $this->email);
+
+        return filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : null;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function publicBankLines(): array
+    {
+        if (! $this->bank_details_visible) {
+            return [];
+        }
+
+        $lines = [
+            'Валюта' => $this->bank_currency,
+            'Получатель' => $this->bank_recipient,
+            'Номер счёта' => $this->bank_account,
+            'Банк' => $this->bank_name,
+            'БИК' => $this->bank_bik,
+            'Корреспондентский счёт' => $this->bank_correspondent_account,
+            'ИНН банка' => $this->bank_inn,
+            'КПП' => $this->bank_kpp,
+            'ОКПО' => $this->bank_okpo,
+            'ОГРН' => $this->bank_ogrn,
+            'SWIFT' => $this->bank_swift,
+            'Адрес банка' => $this->bank_address,
+            'Адрес дополнительного офиса' => $this->bank_office_address,
+        ];
+
+        return array_filter($lines, fn (mixed $value): bool => filled($value));
     }
 }

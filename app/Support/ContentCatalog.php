@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\HomePage;
 use App\Models\Service;
 use App\Models\SiteOption;
+use Illuminate\Support\Facades\Schema;
 
 class ContentCatalog
 {
@@ -70,11 +71,27 @@ class ContentCatalog
                 ['label' => 'Контакты', 'url' => '/kontakty'],
             ],
             'copyright' => 'КБ «Прочность»',
-            'phone' => '+7 (900) 000-00-00',
-            'email' => 'info@example.ru',
+            'phone' => '+7 988 096-20-14',
+            'email' => 'prochnost102@inbox.ru',
             'address' => null,
             'requisites' => null,
             'contact_extra' => null,
+            'inn' => '027608013400',
+            'tax_note' => null,
+            'bank_details_visible' => false,
+            'bank_currency' => 'Российский рубль (RUB)',
+            'bank_recipient' => 'ГИЗАТУЛЛИН РАСИМ ИЛЬДАРОВИЧ',
+            'bank_account' => '40817810860810129507',
+            'bank_name' => 'СТАВРОПОЛЬСКОЕ ОТДЕЛЕНИЕ N5230 ПАО СБЕРБАНК',
+            'bank_bik' => '040702615',
+            'bank_correspondent_account' => '30101810907020000615',
+            'bank_inn' => '7707083893',
+            'bank_kpp' => '263443001',
+            'bank_okpo' => '02747708',
+            'bank_ogrn' => '1027700132195',
+            'bank_swift' => 'SABRRUMMSP1',
+            'bank_address' => '355035, СТАВРОПОЛЬ, УЛ. ЛЕНИНА, 361',
+            'bank_office_address' => '355042, Г. СТАВРОПОЛЬ, УЛ. ДОВАТОРЦЕВ, ДОМ 49Б',
             'contacts_title' => 'Связь',
             'contacts_h1' => 'Контакты',
             'contacts_lead' => 'Свяжитесь с нами, чтобы обсудить задачу и возможные варианты её решения.',
@@ -269,7 +286,8 @@ class ContentCatalog
         }
 
         if (! SiteOption::query()->exists()) {
-            SiteOption::query()->create(self::options());
+            $columns = array_flip(Schema::getColumnListing('site_options'));
+            SiteOption::query()->create(array_intersect_key(self::options(), $columns));
         }
 
         foreach (self::serviceAttributes() as $attributes) {

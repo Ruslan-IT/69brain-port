@@ -15,7 +15,9 @@ class SitePagesTest extends TestCase
             ->assertSee('Что мы делаем?', false)
             ->assertSee('Кто мы?', false)
             ->assertSee('js/beam-analysis.js', false)
-            ->assertSee('+7 (900) 000-00-00', false);
+            ->assertSee('+7 988 096-20-14', false)
+            ->assertSee('027608013400', false)
+            ->assertDontSee('40817810860810129507', false);
         $this->assertSame(1, substr_count($home->getContent(), '<h1'));
 
         $strength = $this->get(route('strength'))
@@ -44,8 +46,12 @@ class SitePagesTest extends TestCase
 
         $contacts = $this->get(route('contacts'))
             ->assertOk()
-            ->assertSee('+7 (900) 000-00-00', false)
-            ->assertSee('info@example.ru', false)
+            ->assertSee('+7 988 096-20-14', false)
+            ->assertSee('prochnost102@inbox.ru', false)
+            ->assertSee('027608013400', false)
+            ->assertDontSee('40817810860810129507', false)
+            ->assertDontSee('7707083893', false)
+            ->assertDontSee('самозанят', false)
             ->assertDontSee('Не указан', false);
         $this->assertSame(1, substr_count($contacts->getContent(), '<h1'));
     }

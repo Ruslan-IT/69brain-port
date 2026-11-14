@@ -30,7 +30,7 @@
             </nav>
         @endif
 
-        @if (filled($siteOptions->phone) || filled($siteOptions->email) || filled($siteOptions->address))
+        @if (filled($siteOptions->phone) || filled($siteOptions->email) || filled($siteOptions->inn) || filled($siteOptions->address))
             <div>
                 <p class="site-footer__title">Контакты</p>
                 <ul>
@@ -51,6 +51,9 @@
                                 {{ $siteOptions->email }}
                             @endif
                         </li>
+                    @endif
+                    @if (filled($siteOptions->inn))
+                        <li>ИНН {{ $siteOptions->inn }}</li>
                     @endif
                     @if (filled($siteOptions->address))
                         <li>{!! nl2br(e($siteOptions->address), false) !!}</li>

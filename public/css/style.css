@@ -12,7 +12,7 @@
     --cyan: #0f6a78;
     --danger: #8e2f2f;
     --header-h: 4.5rem;
-    --wrap: 1120px;
+    --wrap: 1320px;
     --font: Manrope, "Segoe UI", "Helvetica Neue", sans-serif;
     --display: Unbounded, Manrope, "Segoe UI", sans-serif;
     --mono: "IBM Plex Mono", "Cascadia Mono", "Segoe UI", monospace;
@@ -575,7 +575,7 @@ a {
 
 .who__statement {
     margin: 0;
-    max-width: 18em;
+    max-width: 30em;
     font-family: var(--display);
     font-weight: 500;
     font-size: clamp(1.35rem, 2.4vw, 2rem);
@@ -956,6 +956,12 @@ a {
     background: #f6f3ec;
     border-left: 3px solid #8a6a32;
     color: #3e3422;
+}
+
+.form-notice.is-accepted {
+    background: #eef6f0;
+    border-left-color: #2f6b45;
+    color: #1d3b28;
 }
 
 .site-footer {

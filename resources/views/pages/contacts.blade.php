@@ -46,6 +46,12 @@
                                 </dd>
                             </div>
                         @endif
+                        @if (filled($siteOptions->inn))
+                            <div class="contact-slot">
+                                <dt>ИНН</dt>
+                                <dd class="is-set">{{ $siteOptions->inn }}</dd>
+                            </div>
+                        @endif
                         @if (filled($siteOptions->address))
                             <div class="contact-slot">
                                 <dt>Адрес</dt>
@@ -58,7 +64,25 @@
                                 <dd class="is-set">{!! nl2br(e($siteOptions->requisites), false) !!}</dd>
                             </div>
                         @endif
+                        @if (filled($siteOptions->tax_note))
+                            <div class="contact-slot">
+                                <dt>Информация</dt>
+                                <dd class="is-set">{!! nl2br(e($siteOptions->tax_note), false) !!}</dd>
+                            </div>
+                        @endif
                     </dl>
+                    @php($bankLines = $siteOptions->publicBankLines())
+                    @if ($bankLines !== [])
+                        <h3>Банковские реквизиты</h3>
+                        <dl class="contact-slots">
+                            @foreach ($bankLines as $label => $value)
+                                <div class="contact-slot">
+                                    <dt>{{ $label }}</dt>
+                                    <dd class="is-set">{{ $value }}</dd>
+                                </div>
+                            @endforeach
+                        </dl>
+                    @endif
                     @if (($extra = \App\Support\SafeHtml::clean($siteOptions->contact_extra)) !== '')
                         <div class="contact-extra">{!! $extra !!}</div>
                     @endif
@@ -67,10 +91,10 @@
 
             <div class="contact-card">
                 <h2>Обратная связь</h2>
-                <p class="form-note">Приём сообщений с сайта пока не подключён. Поля можно проверить, но обращение не будет доставлено.</p>
+                <p class="form-note">Опишите задачу. Заявка сохранится, и мы ответим по указанному контакту.</p>
 
                 @if (session('form_notice'))
-                    <div class="form-notice" role="status">{{ session('form_notice') }}</div>
+                    <div class="form-notice @if (session('form_notice_tone') === 'accepted') is-accepted @endif" role="status">{{ session('form_notice') }}</div>
                 @endif
 
                 @if ($errors->any())
@@ -84,8 +108,14 @@
                     </div>
                 @endif
 
-                <form class="form" method="post" action="{{ route('contacts.store') }}" novalidate>
+                <form class="form" method="post" action="{{ route('contacts.store') }}" novalidate onsubmit="const button=this.querySelector('[type=submit]'); if(button){ button.disabled=true; }">
                     @csrf
+                    <input type="hidden" name="form_token" value="{{ session('contact_form_token') }}">
+                    <input type="hidden" name="page_url" value="{{ url()->current() }}">
+                    <div class="sr-only" aria-hidden="true">
+                        <label for="company_website">Сайт</label>
+                        <input id="company_website" name="company_website" type="text" tabindex="-1" autocomplete="off" value="">
+                    </div>
                     <div class="field">
                         <label for="name">Имя</label>
                         <input
