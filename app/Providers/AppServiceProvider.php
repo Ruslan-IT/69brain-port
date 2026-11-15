@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Mail\Transport\PhpMailTransport;
 use App\Support\SiteContent;
 use App\Support\SiteSettings;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +24,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Mail::extend('php', function (array $config = []): PhpMailTransport {
+            $parameters = $config['additional_parameters'] ?? null;
+
+            if (($parameters === null || $parameters === '') && filled(config('mail.from.address'))) {
+                $parameters = '-f'.config('mail.from.address');
+            }
+
+            return new PhpMailTransport(is_string($parameters) ? $parameters : null);
+        });
+
         if (! $this->app->runningInConsole()) {
             $path = request()->path();
 

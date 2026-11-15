@@ -29,9 +29,12 @@ return [
     | when delivering an email. You may specify which one you're using for
     | your mailers below. You may also add additional mailers if needed.
     |
-    | Supported: "smtp", "sendmail", "mailgun", "ses", "ses-v2",
+    | Supported: "smtp", "sendmail", "php", "mailgun", "ses", "ses-v2",
     |            "postmark", "resend", "log", "array",
     |            "failover", "roundrobin"
+    |
+    | The "php" mailer calls the built-in PHP mail() function (not SMTP
+    | and not the Symfony sendmail pipe).
     |
     */
 
@@ -68,6 +71,20 @@ return [
         'sendmail' => [
             'transport' => 'sendmail',
             'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
+        ],
+
+        /*
+        |--------------------------------------------------------------------------
+        | PHP mail()
+        |--------------------------------------------------------------------------
+        |
+        | Uses the native PHP mail() function. Optional MAIL_ADDITIONAL_PARAMETERS
+        | overrides the default envelope sender (-f + MAIL_FROM_ADDRESS).
+        |
+        */
+        'php' => [
+            'transport' => 'php',
+            'additional_parameters' => env('MAIL_ADDITIONAL_PARAMETERS'),
         ],
 
         'log' => [

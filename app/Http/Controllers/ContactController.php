@@ -114,11 +114,16 @@ class ContactController extends Controller
 
     private function notify(Inquiry $inquiry): bool
     {
-        $recipient = SiteContent::options()->notificationEmail();
+        // Единый источник To: email из настроек сайта в админке (site_options.email).
+        // From берётся из config/mail.php (.env) и здесь не подменяется.
+        $recipient = SiteContent::ensureOptions()->notificationEmail();
 
         if ($recipient === null) {
-            $inquiry->update(['mail_error' => 'В контактах не указана почта для уведомления.']);
-            Log::warning('Заявка сохранена, но почта для уведомления не задана.', ['inquiry_id' => $inquiry->id]);
+            $inquiry->update(['mail_error' => 'В настройках сайта не указана корректная почта для уведомлений о заявках.']);
+            Log::warning('Заявка сохранена, но почта для уведомления не задана или некорректна.', [
+                'inquiry_id' => $inquiry->id,
+                'configured_email' => SiteContent::ensureOptions()->email,
+            ]);
 
             return false;
         }

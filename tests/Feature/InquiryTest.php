@@ -96,10 +96,14 @@ class InquiryTest extends TestCase
         $this->assertSame(1, Inquiry::query()->count());
     }
 
-    public function test_configured_mailer_sends_the_inquiry_to_the_contact_email(): void
+    public function test_configured_mailer_sends_the_inquiry_to_the_site_settings_email(): void
     {
         Mail::fake();
-        config(['mail.default' => 'smtp']);
+        config(['mail.default' => 'php']);
+
+        $recipient = SiteOption::query()->value('email');
+        $this->assertIsString($recipient);
+        $this->assertNotSame('ruslan.r.f@yandex.ru', $recipient);
 
         $this->post(route('contacts.store'), [
             'name' => 'Иван',
@@ -111,19 +115,70 @@ class InquiryTest extends TestCase
                 return str_contains($notice, 'Заявка отправлена');
             });
 
-        Mail::assertSent(InquiryReceived::class, function (InquiryReceived $mail): bool {
-            return $mail->hasTo('prochnost102@inbox.ru')
+        Mail::assertSent(InquiryReceived::class, function (InquiryReceived $mail) use ($recipient): bool {
+            return $mail->hasTo($recipient)
+                && ! $mail->hasTo('ruslan.r.f@yandex.ru')
                 && $mail->envelope()->subject === 'Новая заявка с сайта КБ «Прочность»';
         });
+        Mail::assertSentCount(1);
 
         $this->assertNotNull(Inquiry::query()->firstOrFail()->mail_sent_at);
     }
 
+    public function test_changed_site_email_becomes_the_new_inquiry_recipient(): void
+    {
+        Mail::fake();
+        config(['mail.default' => 'php']);
+
+        SiteOption::query()->firstOrFail()->update(['email' => 'new-desk@example.ru']);
+
+        $this->post(route('contacts.store'), [
+            'name' => 'Иван',
+            'contact' => 'ivan@example.com',
+            'message' => 'Нужен расчёт кронштейна на прочность.',
+            'form_token' => $this->formToken(),
+        ])->assertSessionHas('form_notice_tone', 'accepted');
+
+        Mail::assertSent(InquiryReceived::class, function (InquiryReceived $mail): bool {
+            return $mail->hasTo('new-desk@example.ru')
+                && ! $mail->hasTo('prochnost102@inbox.ru')
+                && ! $mail->hasTo('ruslan.r.f@yandex.ru');
+        });
+        Mail::assertSentCount(1);
+    }
+
+    public function test_missing_site_email_keeps_inquiry_and_does_not_send_mail(): void
+    {
+        Mail::fake();
+        config(['mail.default' => 'php']);
+
+        SiteOption::query()->firstOrFail()->update(['email' => null]);
+
+        $this->post(route('contacts.store'), [
+            'name' => 'Иван',
+            'contact' => 'ivan@example.com',
+            'message' => 'Нужен расчёт кронштейна на прочность.',
+            'form_token' => $this->formToken(),
+        ])->assertSessionHas('form_notice', function (string $notice): bool {
+            return str_contains($notice, 'сохранена')
+                && str_contains($notice, 'не отправлено');
+        });
+
+        Mail::assertNothingSent();
+
+        $inquiry = Inquiry::query()->firstOrFail();
+        $this->assertNull($inquiry->mail_sent_at);
+        $this->assertStringContainsString('не указана корректная почта', (string) $inquiry->mail_error);
+    }
+
     public function test_mail_failure_keeps_the_saved_inquiry(): void
     {
-        config(['mail.default' => 'smtp']);
-        Mail::shouldReceive('to')->once()->with('prochnost102@inbox.ru')->andReturnSelf();
-        Mail::shouldReceive('send')->once()->andThrow(new RuntimeException('smtp down'));
+        config(['mail.default' => 'php']);
+        $recipient = SiteOption::query()->value('email');
+        $this->assertIsString($recipient);
+
+        Mail::shouldReceive('to')->once()->with($recipient)->andReturnSelf();
+        Mail::shouldReceive('send')->once()->andThrow(new RuntimeException('php mail() failed'));
 
         $this->post(route('contacts.store'), [
             'name' => 'Иван',
@@ -137,7 +192,26 @@ class InquiryTest extends TestCase
 
         $inquiry = Inquiry::query()->firstOrFail();
         $this->assertNull($inquiry->mail_sent_at);
-        $this->assertStringContainsString('smtp down', (string) $inquiry->mail_error);
+        $this->assertStringContainsString('php mail() failed', (string) $inquiry->mail_error);
+    }
+
+    public function test_application_mail_code_does_not_hardcode_admin_recipient(): void
+    {
+        $paths = [
+            app_path('Http/Controllers/ContactController.php'),
+            app_path('Mail/InquiryReceived.php'),
+            app_path('Mail/Transport/PhpMailTransport.php'),
+            app_path('Providers/AppServiceProvider.php'),
+        ];
+
+        foreach ($paths as $path) {
+            $this->assertFileExists($path);
+            $this->assertStringNotContainsString(
+                'ruslan.r.f@yandex.ru',
+                file_get_contents($path) ?: '',
+                $path.' must not hardcode the admin recipient email.',
+            );
+        }
     }
 
     public function test_bank_details_stay_hidden_until_the_admin_enables_them(): void

@@ -73,7 +73,8 @@ class ManageSettings extends Page
                     TextInput::make('email')
                         ->label('Электронная почта')
                         ->email()
-                        ->maxLength(180),
+                        ->maxLength(180)
+                        ->helperText('Основная почта сайта: показывается в подвале и на этот адрес приходят уведомления о новых заявках с формы.'),
                     TextInput::make('copyright')
                         ->label('Текст копирайта')
                         ->helperText('Год подставляется автоматически.')
