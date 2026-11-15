@@ -99,7 +99,7 @@ class InquiryTest extends TestCase
     public function test_configured_mailer_sends_the_inquiry_to_the_site_settings_email(): void
     {
         Mail::fake();
-        config(['mail.default' => 'php']);
+        config(['mail.default' => 'smtp']);
 
         $recipient = SiteOption::query()->value('email');
         $this->assertIsString($recipient);
@@ -128,7 +128,7 @@ class InquiryTest extends TestCase
     public function test_changed_site_email_becomes_the_new_inquiry_recipient(): void
     {
         Mail::fake();
-        config(['mail.default' => 'php']);
+        config(['mail.default' => 'smtp']);
 
         SiteOption::query()->firstOrFail()->update(['email' => 'new-desk@example.ru']);
 
@@ -150,7 +150,7 @@ class InquiryTest extends TestCase
     public function test_missing_site_email_keeps_inquiry_and_does_not_send_mail(): void
     {
         Mail::fake();
-        config(['mail.default' => 'php']);
+        config(['mail.default' => 'smtp']);
 
         SiteOption::query()->firstOrFail()->update(['email' => null]);
 
@@ -173,12 +173,12 @@ class InquiryTest extends TestCase
 
     public function test_mail_failure_keeps_the_saved_inquiry(): void
     {
-        config(['mail.default' => 'php']);
+        config(['mail.default' => 'smtp']);
         $recipient = SiteOption::query()->value('email');
         $this->assertIsString($recipient);
 
         Mail::shouldReceive('to')->once()->with($recipient)->andReturnSelf();
-        Mail::shouldReceive('send')->once()->andThrow(new RuntimeException('php mail() failed'));
+        Mail::shouldReceive('send')->once()->andThrow(new RuntimeException('smtp down'));
 
         $this->post(route('contacts.store'), [
             'name' => 'Иван',
@@ -192,7 +192,7 @@ class InquiryTest extends TestCase
 
         $inquiry = Inquiry::query()->firstOrFail();
         $this->assertNull($inquiry->mail_sent_at);
-        $this->assertStringContainsString('php mail() failed', (string) $inquiry->mail_error);
+        $this->assertStringContainsString('smtp down', (string) $inquiry->mail_error);
     }
 
     public function test_application_mail_code_does_not_hardcode_admin_recipient(): void
@@ -202,16 +202,55 @@ class InquiryTest extends TestCase
             app_path('Mail/InquiryReceived.php'),
             app_path('Mail/Transport/PhpMailTransport.php'),
             app_path('Providers/AppServiceProvider.php'),
+            config_path('mail.php'),
         ];
 
         foreach ($paths as $path) {
             $this->assertFileExists($path);
+            $contents = file_get_contents($path) ?: '';
             $this->assertStringNotContainsString(
                 'ruslan.r.f@yandex.ru',
-                file_get_contents($path) ?: '',
+                $contents,
                 $path.' must not hardcode the admin recipient email.',
             );
         }
+    }
+
+    public function test_smtp_mailer_config_uses_mail_ru_defaults_without_hardcoded_recipient(): void
+    {
+        config([
+            'mail.default' => 'smtp',
+            'mail.mailers.smtp' => [
+                'transport' => 'smtp',
+                'scheme' => 'smtps',
+                'host' => 'smtp.mail.ru',
+                'port' => 465,
+                'username' => 'prochnost102@inbox.ru',
+                'password' => 'secret-app-password',
+            ],
+            'mail.from.address' => 'prochnost102@inbox.ru',
+            'mail.from.name' => 'КБ «Прочность»',
+        ]);
+
+        $smtp = config('mail.mailers.smtp');
+
+        $this->assertSame('smtp', config('mail.default'));
+        $this->assertSame('smtps', $smtp['scheme']);
+        $this->assertSame('smtp.mail.ru', $smtp['host']);
+        $this->assertSame(465, (int) $smtp['port']);
+        $this->assertSame('prochnost102@inbox.ru', $smtp['username']);
+        $this->assertSame('prochnost102@inbox.ru', config('mail.from.address'));
+        $this->assertSame('КБ «Прочность»', config('mail.from.name'));
+
+        SiteOption::query()->firstOrFail()->update(['email' => 'desk-from-admin@example.ru']);
+
+        $this->assertSame('desk-from-admin@example.ru', SiteOption::query()->firstOrFail()->notificationEmail());
+        $this->assertSame('prochnost102@inbox.ru', config('mail.from.address'));
+        $this->assertNotSame(
+            SiteOption::query()->firstOrFail()->notificationEmail(),
+            config('mail.from.address'),
+            'From (SMTP mailbox) must stay separate from To (admin notification email).',
+        );
     }
 
     public function test_bank_details_stay_hidden_until_the_admin_enables_them(): void
